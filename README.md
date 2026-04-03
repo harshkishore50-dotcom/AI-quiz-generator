@@ -104,8 +104,7 @@ AIQuizGenerator/
 
 ---
 
-## 👨‍💻 Author
+
 
 **Kishore Harshvardhan**  
-B.Tech CSE — ITER, SOA University  
-GitHub: [your-github-handle]
+
