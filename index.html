@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Quiz Generator — Kishore Harshvardhan</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#040608;--bg2:#070c10;
+  --g:#00ff88;--g2:#00cc6a;
+  --g-dim:rgba(0,255,136,0.07);--g-glow:rgba(0,255,136,0.22);
+  --amber:#ffb800;--cyan:#00d4ff;
+  --text:#e8f5ee;--muted:#4a7060;
+  --card:rgba(0,255,136,0.03);--border:rgba(0,255,136,0.11);--border2:rgba(0,255,136,0.22);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;cursor:none}
+
+#cursor{position:fixed;width:10px;height:10px;background:var(--g);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 10px var(--g),0 0 28px var(--g-glow);transition:transform .08s}
+#cursor-ring{position:fixed;width:34px;height:34px;border:1px solid var(--g);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);opacity:.35;transition:width .18s,height .18s,opacity .18s}
+
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.05) 2px,rgba(0,0,0,.05) 4px);pointer-events:none;z-index:1}
+
+/* HERO */
+.hero{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;overflow:hidden}
+.hero::before{content:'';position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(0,255,136,.09) 0%,transparent 70%);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-60%);pointer-events:none}
+
+.eyebrow{display:flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:.67rem;letter-spacing:.18em;color:var(--g);text-transform:uppercase;margin-bottom:28px;opacity:0;animation:riseIn .7s .1s ease forwards}
+.eyebrow .bar{width:30px;height:1px;background:var(--g);box-shadow:0 0 6px var(--g)}
+
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(2.8rem,9vw,7.5rem);font-weight:900;line-height:.94;letter-spacing:-.01em;opacity:0;animation:riseIn .7s .2s ease forwards}
+.w1{display:block;color:var(--text)}
+.w2{display:block;-webkit-text-stroke:2px var(--g);color:transparent;text-shadow:0 0 40px var(--g-glow),0 0 80px rgba(0,255,136,.12)}
+
+.hero-sub{margin-top:28px;max-width:520px;font-size:1.05rem;line-height:1.8;color:var(--muted);font-weight:300;opacity:0;animation:riseIn .7s .35s ease forwards}
+.hero-sub em{color:var(--amber);font-style:normal;font-weight:600}
+
+.stats{display:flex;gap:48px;flex-wrap:wrap;justify-content:center;margin-top:44px;opacity:0;animation:riseIn .7s .45s ease forwards}
+.stat{text-align:center}
+.sn{font-family:'Orbitron',monospace;font-size:2rem;font-weight:700;color:var(--g);display:block;text-shadow:0 0 18px var(--g-glow)}
+.sl{font-size:.68rem;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+
+.btns{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:40px;opacity:0;animation:riseIn .7s .55s ease forwards}
+.btn{font-family:'DM Mono',monospace;font-size:.77rem;font-weight:500;letter-spacing:.08em;padding:14px 32px;border-radius:3px;text-decoration:none;cursor:none;border:none;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-3px)}
+.btn-g{background:var(--g);color:#000;font-weight:700;box-shadow:0 0 18px var(--g-glow)}
+.btn-g:hover{box-shadow:0 0 36px var(--g),0 8px 28px rgba(0,255,136,.35)}
+.btn-ghost{background:transparent;color:var(--g);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--g-dim);border-color:var(--g)}
+
+.scrl{position:absolute;bottom:36px;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;opacity:0;animation:riseIn .7s .9s ease forwards}
+.scrl-line{width:1px;height:40px;background:linear-gradient(var(--g),transparent);animation:scrlAnim 1.8s infinite}
+@keyframes scrlAnim{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* LAYOUT */
+.wrap{max-width:1000px;margin:0 auto;padding:0 24px;position:relative;z-index:2}
+section{padding:100px 0}
+.s-lbl{font-family:'DM Mono',monospace;font-size:.63rem;letter-spacing:.22em;color:var(--g);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.s-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+.s-ttl{font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:700;letter-spacing:.02em;margin-bottom:52px;color:var(--text)}
+
+/* STEPS */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:2px;overflow:hidden}
+.step{background:var(--bg2);padding:36px 24px;position:relative;transition:background .25s}
+.step:hover{background:#060e0a}
+.step::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:0;transition:opacity .3s}
+.step:hover::before{opacity:1}
+.sn2{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted);letter-spacing:.12em;margin-bottom:18px}
+.sico{font-size:1.6rem;margin-bottom:14px;display:block}
+.step h3{font-size:.92rem;font-weight:600;margin-bottom:8px;color:var(--g)}
+.step p{font-size:.78rem;color:var(--muted);line-height:1.65}
+
+/* TERMINAL */
+.terminal{background:#020505;border:1px solid var(--border2);border-radius:5px;overflow:hidden;font-family:'DM Mono',monospace;font-size:.8rem;box-shadow:0 0 60px rgba(0,255,136,.05)}
+.t-bar{background:#060e0a;border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:8px}
+.dot{width:11px;height:11px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c840}
+.t-path{margin-left:auto;color:var(--muted);font-size:.62rem;letter-spacing:.06em}
+.t-body{padding:26px;line-height:2.1}
+.g{color:var(--g)}.am{color:var(--amber)}.cy{color:var(--cyan)}.mu{color:var(--muted)}.wh{color:var(--text)}.rd{color:#ff5f57}
+
+/* TECH CARDS */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.tcard{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:28px;position:relative;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s}
+.tcard:hover{border-color:var(--g);transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,255,136,.09)}
+.tcard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:0;transition:opacity .3s}
+.tcard:hover::after{opacity:1}
+.tico{font-size:1.7rem;margin-bottom:12px;display:block}
+.tcard h3{font-family:'Orbitron',sans-serif;font-size:.74rem;font-weight:700;color:var(--g);letter-spacing:.08em;margin-bottom:8px}
+.tcard p{font-size:.78rem;color:var(--muted);line-height:1.6}
+
+/* CODE */
+.cwrap{background:#020505;border:1px solid var(--border2);border-radius:5px;overflow:hidden}
+.chead{background:#060e0a;border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:.66rem;color:var(--muted)}
+.cbadge{margin-left:auto;background:rgba(0,255,136,.09);color:var(--g);border:1px solid var(--border2);padding:2px 10px;border-radius:2px;font-size:.58rem;letter-spacing:.12em}
+.cbody{padding:26px;font-family:'DM Mono',monospace;font-size:.77rem;line-height:1.9;overflow-x:auto;color:var(--text)}
+.kw{color:#ff79c6}.fn{color:var(--cyan)}.str{color:var(--amber)}.cm{color:var(--muted);font-style:italic}.cl{color:var(--g)}.nm{color:#bd93f9}
+
+/* ABOUT */
+.acard{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:48px;display:flex;align-items:center;gap:40px;flex-wrap:wrap;position:relative;overflow:hidden}
+.acard::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,255,136,.07),transparent 70%);border-radius:50%;pointer-events:none}
+.ctl,.cbr{position:absolute;width:22px;height:22px;border-color:var(--g);border-style:solid;opacity:.45}
+.ctl{top:14px;left:14px;border-width:2px 0 0 2px}
+.cbr{bottom:14px;right:14px;border-width:0 2px 2px 0}
+.av{width:78px;height:78px;border-radius:50%;flex-shrink:0;background:transparent;border:2px solid var(--g);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.35rem;font-weight:900;color:var(--g);text-shadow:0 0 18px var(--g-glow);box-shadow:0 0 20px var(--g-glow),inset 0 0 20px rgba(0,255,136,.04);position:relative}
+.av::after{content:'';position:absolute;inset:-7px;border-radius:50%;border:1px solid rgba(0,255,136,.14);animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai h3{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:700;color:var(--g);margin-bottom:5px;text-shadow:0 0 18px var(--g-glow)}
+.ai .role{font-size:.78rem;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.06em;margin-bottom:14px}
+.ai p{font-size:.85rem;color:var(--muted);line-height:1.7;max-width:480px}
+.lrow{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.lbtn{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.08em;padding:8px 18px;border-radius:3px;text-decoration:none;cursor:none;border:1px solid var(--border2);color:var(--g);background:transparent;transition:background .2s,box-shadow .2s}
+.lbtn:hover{background:var(--g-dim);box-shadow:0 0 10px var(--g-glow)}
+
+footer{position:relative;z-index:2;border-top:1px solid var(--border);padding:34px 24px;text-align:center;font-family:'DM Mono',monospace;font-size:.64rem;color:var(--muted);letter-spacing:.1em}
+footer span{color:var(--g)}
+.div{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+
+@keyframes riseIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="particles"></canvas>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow"><span class="bar"></span>Java · Claude API · Console App<span class="bar"></span></div>
+  <h1><span class="w1">AI QUIZ</span><span class="w2">GENERATOR</span></h1>
+  <p class="hero-sub">A Java console app powered by <em>Claude (Anthropic)</em> that generates multiple-choice quizzes on any topic — in seconds.</p>
+  <div class="stats">
+    <div class="stat"><span class="sn" data-target="0">0</span><span class="sl">External Libs</span></div>
+    <div class="stat"><span class="sn" data-target="10" data-suffix="+">0+</span><span class="sl">Topics Tested</span></div>
+    <div class="stat"><span class="sn" data-target="180" data-prefix="~">~0</span><span class="sl">Lines of Code</span></div>
+    <div class="stat"><span class="sn" data-inf="true">∞</span><span class="sl">Questions Possible</span></div>
+  </div>
+  <div class="btns">
+    <a href="https://github.com/your-github/AIQuizGenerator" class="btn btn-g" target="_blank">◈ VIEW SOURCE</a>
+    <a href="#demo" class="btn btn-ghost">LIVE DEMO ↓</a>
+  </div>
+  <div class="scrl"><span>scroll</span><div class="scrl-line"></div></div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="wrap">
+    <div class="s-lbl reveal">// system architecture</div>
+    <div class="s-ttl reveal">How It Works</div>
+    <div class="steps reveal">
+      <div class="step"><div class="sn2">01 / INPUT</div><span class="sico">🎯</span><h3>Topic + Count</h3><p>User enters any topic and picks 1–10 questions from the console.</p></div>
+      <div class="step"><div class="sn2">02 / PROMPT</div><span class="sico">⚙️</span><h3>Engineering</h3><p>Structured prompt with strict format rules sent to Claude via HTTP POST.</p></div>
+      <div class="step"><div class="sn2">03 / AI</div><span class="sico">🧠</span><h3>Generation</h3><p>Claude generates contextually accurate MCQs with four options and answers.</p></div>
+      <div class="step"><div class="sn2">04 / PARSE</div><span class="sico">🔍</span><h3>Custom Parser</h3><p>Zero-dependency line parser extracts questions, options and answer indices.</p></div>
+      <div class="step"><div class="sn2">05 / PLAY</div><span class="sico">🏁</span><h3>Quiz + Score</h3><p>Live feedback per answer, then a final score with a performance rating.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- TERMINAL -->
+<section id="demo">
+  <div class="wrap">
+    <div class="s-lbl reveal">// sample output</div>
+    <div class="s-ttl reveal">Terminal Demo</div>
+    <div class="terminal reveal">
+      <div class="t-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="t-path">~/AIQuizGenerator $ java -cp out com.quizgen.QuizGenerator</div></div>
+      <div class="t-body">
+<div class="g">╔══════════════════════════════════════╗</div>
+<div class="g">║    🤖  AI Quiz Generator  v1.0       ║</div>
+<div class="g">║    Powered by Claude (Anthropic)     ║</div>
+<div class="g">╚══════════════════════════════════════╝</div>
+<br>
+<div><span class="cy">Enter a topic:</span> <span class="am">Java OOP</span></div>
+<div><span class="cy">How many questions? (1-10):</span> <span class="am">3</span></div>
+<br>
+<div class="mu">⏳  Generating quiz on "Java OOP" via Claude...</div>
+<br>
+<div class="wh">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+<br>
+<div class="g">Question 1 of 3</div>
+<div class="wh">❓  Which keyword is used to inherit a class in Java?</div>
+<div class="mu">&nbsp;&nbsp;&nbsp;A) implements &nbsp;&nbsp;B) extends</div>
+<div class="mu">&nbsp;&nbsp;&nbsp;C) inherits &nbsp;&nbsp;&nbsp;D) super</div>
+<br>
+<div><span class="cy">Your answer:</span> <span class="am">B</span></div>
+<div class="g">✅  Correct!</div>
+<br>
+<div class="g">Question 2 of 3</div>
+<div class="wh">❓  What does 'final' do when applied to a method?</div>
+<div class="mu">&nbsp;&nbsp;&nbsp;A) Makes it static &nbsp;&nbsp;B) Makes it abstract</div>
+<div class="mu">&nbsp;&nbsp;&nbsp;C) Prevents overriding &nbsp;D) Prevents overloading</div>
+<br>
+<div><span class="cy">Your answer:</span> <span class="am">A</span></div>
+<div class="rd">❌  Wrong! → Correct answer: C) Prevents overriding</div>
+<br>
+<div class="wh">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+<br>
+<div class="g">🏁  QUIZ COMPLETE!</div>
+<div class="wh">&nbsp;&nbsp;&nbsp;Score: <span class="g">2 / 3</span></div>
+<div class="wh">&nbsp;&nbsp;&nbsp;Result: <span class="am">66.7% — 👍 Good job! Keep learning.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- TECH STACK -->
+<section>
+  <div class="wrap">
+    <div class="s-lbl reveal">// dependencies</div>
+    <div class="s-ttl reveal">Tech Stack</div>
+    <div class="tgrid">
+      <div class="tcard reveal"><span class="tico">☕</span><h3>JAVA 11+</h3><p>Core language with modern HttpClient, clean OOP with inner model classes.</p></div>
+      <div class="tcard reveal"><span class="tico">🤖</span><h3>CLAUDE API</h3><p>Anthropic's claude-sonnet-4 via REST — structured prompt engineering for reliable output.</p></div>
+      <div class="tcard reveal"><span class="tico">🌐</span><h3>java.net.http</h3><p>Zero external dependencies — pure Java HTTP POST with handcrafted JSON serialization.</p></div>
+      <div class="tcard reveal"><span class="tico">🔧</span><h3>CUSTOM PARSER</h3><p>Regex + line parsing extracts structured quiz data from Claude's raw text output.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- CODE -->
+<section>
+  <div class="wrap">
+    <div class="s-lbl reveal">// source highlight</div>
+    <div class="s-ttl reveal">Core Logic</div>
+    <div class="cwrap reveal">
+      <div class="chead"><span>📄 QuizGenerator.java</span><span class="cbadge">JAVA</span></div>
+      <div class="cbody">
+<span class="cm">// Prompt engineered for strict MCQ output format</span>
+<span class="kw">private</span> <span class="cl">String</span> <span class="fn">buildPrompt</span>(<span class="cl">String</span> topic, <span class="kw">int</span> numQ) {
+  <span class="kw">return</span> <span class="str">"Generate exactly "</span> + numQ + <span class="str">" MCQs about \""</span> + topic + <span class="str">"\".\n"</span>
+       + <span class="str">"Format: Q1. &lt;text&gt;\nA)..B)..C)..D)..\nANSWER: &lt;A-D&gt;"</span>;
+}
+
+<span class="cm">// Zero-dependency HTTP call to Claude API</span>
+<span class="cl">HttpRequest</span> req = <span class="cl">HttpRequest</span>.<span class="fn">newBuilder</span>()
+    .<span class="fn">uri</span>(<span class="cl">URI</span>.<span class="fn">create</span>(API_URL))
+    .<span class="fn">header</span>(<span class="str">"x-api-key"</span>, API_KEY)
+    .<span class="fn">header</span>(<span class="str">"anthropic-version"</span>, <span class="str">"2023-06-01"</span>)
+    .<span class="fn">POST</span>(<span class="cl">BodyPublishers</span>.<span class="fn">ofString</span>(body)).<span class="fn">build</span>();
+
+<span class="cm">// Parse Claude's response into Question objects</span>
+<span class="kw">for</span> (<span class="cl">String</span> line : raw.<span class="fn">split</span>(<span class="str">"\n"</span>)) {
+    <span class="kw">if</span> (line.<span class="fn">matches</span>(<span class="str">"Q\\d+\\..*"</span>)) current = <span class="kw">new</span> <span class="cl">Question</span>(line);
+    <span class="kw">else if</span> (line.<span class="fn">startsWith</span>(<span class="str">"ANSWER:"</span>))
+        current.correctIndex = <span class="str">"ABCD"</span>.<span class="fn">indexOf</span>(line.<span class="fn">charAt</span>(<span class="nm">8</span>));
+}
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- AUTHOR -->
+<section>
+  <div class="wrap">
+    <div class="s-lbl reveal">// developer</div>
+    <div class="s-ttl reveal">About Me</div>
+    <div class="acard reveal">
+      <div class="ctll"></div><div class="cbrr"></div>
+      <div class="ctl"></div><div class="cbr"></div>
+      <div class="av">KH</div>
+      <div class="ai">
+        <h3>KISHORE HARSHVARDHAN</h3>
+        <div class="role">B.Tech CSE · ITER, SOA University</div>
+        <p>Passionate about Java, DSA, and building AI-integrated applications from scratch. Open to internships, collaborations, and cool projects.</p>
+        <div class="lrow">
+          <a href="https://github.com/your-github" class="lbtn" target="_blank">⌥ GITHUB</a>
+          <a href="https://linkedin.com/in/your-linkedin" class="lbtn" target="_blank">⌘ LINKEDIN</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><p>AI QUIZ GENERATOR &nbsp;·&nbsp; JAVA + <span>CLAUDE API</span> &nbsp;·&nbsp; <span>KISHORE HARSHVARDHAN</span> &nbsp;·&nbsp; 2025</p></footer>
+
+<script>
+// CURSOR
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function loop(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop)})();
+document.querySelectorAll('a,.btn,.lbtn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='54px';ring.style.height='54px';ring.style.opacity='.18'});
+  el.addEventListener('mouseleave',()=>{ring.style.width='34px';ring.style.height='34px';ring.style.opacity='.35'});
+});
+
+// PARTICLES
+const cv=document.getElementById('particles'),cx=cv.getContext('2d');
+let W,H,pts=[];
+function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight}rsz();
+window.addEventListener('resize',rsz);
+function mkP(){return{x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.4+.3,a:Math.random()}}
+for(let i=0;i<85;i++)pts.push(mkP());
+(function draw(){
+  cx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>W)p.vx*=-1;
+    if(p.y<0||p.y>H)p.vy*=-1;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(0,255,136,${p.a*.35})`;cx.fill();
+  });
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<110){cx.beginPath();cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);cx.strokeStyle=`rgba(0,255,136,${.06*(1-d/110)})`;cx.lineWidth=.5;cx.stroke()}
+  }
+  requestAnimationFrame(draw);
+})();
+
+// REVEAL
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');obs.unobserve(x.target)}})},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// COUNTERS
+const cobs=new IntersectionObserver(e=>{e.forEach(x=>{
+  if(!x.isIntersecting)return;
+  const el=x.target;
+  if(el.dataset.inf)return;
+  const target=parseInt(el.dataset.target),suf=el.dataset.suffix||'',pre=el.dataset.prefix||'';
+  let v=0;const inc=target/(1600/16);
+  const t=setInterval(()=>{v=Math.min(v+inc,target);el.textContent=pre+Math.round(v)+suf;if(v>=target)clearInterval(t)},16);
+  cobs.unobserve(el);
+})},{threshold:.5});
+document.querySelectorAll('.sn').forEach(el=>cobs.observe(el));
+</script>
+</body>
+</html>
